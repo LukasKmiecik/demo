@@ -1,0 +1,11 @@
+{
+  "id": "silownik_przepustnicy_nawiewu_01",
+  "typ": "SilownikPrzepustnicyBelimo",
+  "definicjaTypu": "silownik_belimo_podstawowy",
+  "nazwa": "Siłownik przepustnicy nawiewu 01",
+  "pozycja": [2.8, 1.2, 0.6],
+  "rotacja": [0, 0, 90],
+  "lokalizacja": "pom_techniczne_01",
+  "przepustnicaId": "przepustnica_nawiewu_01",
+  "tag": "BELIMO-SN-01"
+}
