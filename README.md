@@ -27,3 +27,4 @@ To jest statyczna wersja demo przygotowana specjalnie pod GitHub Pages.
 - rozwinięcie logiki połączeń,
 - nawigacja po budynku,
 - później tryb VR.
+
