@@ -5,12 +5,28 @@
       "nazwa": "Agregat wentylacyjny",
       "typ": "AgregatWentylacyjny",
       "opis": "Komponent nadrzędny łączący wentylator, filtr, przepustnicę i automatykę.",
-      "wejscia": ["zasilanie", "tryb pracy", "sygnał start"],
-      "wyjscia": ["status", "alarm", "przepływ powietrza"],
+      "wejscia": [
+        "zasilanie",
+        "tryb pracy",
+        "sygnał start"
+      ],
+      "wyjscia": [
+        "status",
+        "alarm",
+        "przepływ powietrza"
+      ],
       "bledy": [],
       "lokalizacja": "Pomieszczenie techniczne / ściana północna",
-      "pozycja": [0, 0, 0],
-      "rozmiar": [4.2, 2.2, 2.0],
+      "pozycja": [
+        0,
+        0,
+        0
+      ],
+      "rozmiar": [
+        4.2,
+        2.2,
+        2.0
+      ],
       "kolor": "#5b7fff"
     },
     {
@@ -18,12 +34,27 @@
       "nazwa": "Wentylator nawiewu",
       "typ": "Wentylator",
       "opis": "Wentylator odpowiedzialny za przepływ powietrza w sekcji nawiewnej.",
-      "wejscia": ["zasilanie", "napęd mechaniczny"],
-      "wyjscia": ["obroty", "przepływ", "status pracy"],
+      "wejscia": [
+        "zasilanie",
+        "napęd mechaniczny"
+      ],
+      "wyjscia": [
+        "obroty",
+        "przepływ",
+        "status pracy"
+      ],
       "bledy": [],
       "lokalizacja": "Wewnątrz agregatu / sekcja nawiewu",
-      "pozycja": [-0.9, 0.2, 0.15],
-      "rozmiar": [0.7, 0.7, 0.7],
+      "pozycja": [
+        -0.9,
+        0.2,
+        0.15
+      ],
+      "rozmiar": [
+        0.7,
+        0.7,
+        0.7
+      ],
       "kolor": "#40c4ff"
     },
     {
@@ -31,12 +62,27 @@
       "nazwa": "Silnik wentylatora",
       "typ": "Silnik",
       "opis": "Silnik napędzający wentylator nawiewu przez pasek klinowy.",
-      "wejscia": ["zasilanie", "sygnał start"],
-      "wyjscia": ["moment", "prędkość", "status"],
+      "wejscia": [
+        "zasilanie",
+        "sygnał start"
+      ],
+      "wyjscia": [
+        "moment",
+        "prędkość",
+        "status"
+      ],
       "bledy": [],
       "lokalizacja": "Wewnątrz agregatu / sekcja napędu",
-      "pozycja": [-1.4, -0.2, 0.2],
-      "rozmiar": [0.45, 0.45, 0.45],
+      "pozycja": [
+        -1.4,
+        -0.2,
+        0.2
+      ],
+      "rozmiar": [
+        0.45,
+        0.45,
+        0.45
+      ],
       "kolor": "#8bc34a"
     },
     {
@@ -44,12 +90,24 @@
       "nazwa": "Pasek klinowy",
       "typ": "PasekKlinowy",
       "opis": "Przenosi napęd z silnika na wentylator. W systemie można symulować poślizg albo zerwanie.",
-      "wejscia": ["napęd z silnika"],
-      "wyjscia": ["napęd na wentylator"],
+      "wejscia": [
+        "napęd z silnika"
+      ],
+      "wyjscia": [
+        "napęd na wentylator"
+      ],
       "bledy": [],
       "lokalizacja": "Wewnątrz agregatu / sekcja napędu",
-      "pozycja": [-1.1, -0.02, 0.2],
-      "rozmiar": [0.2, 0.05, 0.75],
+      "pozycja": [
+        -1.1,
+        -0.02,
+        0.2
+      ],
+      "rozmiar": [
+        0.2,
+        0.05,
+        0.75
+      ],
       "kolor": "#f9a825"
     },
     {
@@ -57,12 +115,25 @@
       "nazwa": "Filtr powietrza",
       "typ": "FiltrPowietrza",
       "opis": "Sekcja filtracyjna z możliwością powiązania z presostatem i alarmem zabrudzenia.",
-      "wejscia": ["strumień powietrza"],
-      "wyjscia": ["status zabrudzenia", "spadek ciśnienia"],
+      "wejscia": [
+        "strumień powietrza"
+      ],
+      "wyjscia": [
+        "status zabrudzenia",
+        "spadek ciśnienia"
+      ],
       "bledy": [],
       "lokalizacja": "Wewnątrz agregatu / sekcja filtracji",
-      "pozycja": [0.25, 0.1, 0.0],
-      "rozmiar": [0.65, 1.2, 0.18],
+      "pozycja": [
+        0.25,
+        0.1,
+        0.0
+      ],
+      "rozmiar": [
+        0.65,
+        1.2,
+        0.18
+      ],
       "kolor": "#ffb74d"
     },
     {
@@ -70,12 +141,27 @@
       "nazwa": "Przepustnica nawiewu",
       "typ": "Przepustnica",
       "opis": "Element regulujący otwarcie kanału. W tej wersji sterowany siłownikiem Belimo.",
-      "wejscia": ["otwórz", "zamknij", "pozycja siłownika"],
-      "wyjscia": ["otwarcie %", "status"],
+      "wejscia": [
+        "otwórz",
+        "zamknij",
+        "pozycja siłownika"
+      ],
+      "wyjscia": [
+        "otwarcie %",
+        "status"
+      ],
       "bledy": [],
       "lokalizacja": "Kanał nawiewny przy agregacie",
-      "pozycja": [1.95, 0.0, 0.0],
-      "rozmiar": [0.35, 0.7, 0.7],
+      "pozycja": [
+        1.95,
+        0.0,
+        0.0
+      ],
+      "rozmiar": [
+        0.35,
+        0.7,
+        0.7
+      ],
       "kolor": "#90caf9"
     },
     {
@@ -83,25 +169,67 @@
       "nazwa": "Siłownik przepustnicy Belimo",
       "typ": "SilownikPrzepustnicyBelimo",
       "opis": "Napędza przepustnicę, obsługuje sygnał otwórz/zamknij i tryb analogowy. To główny komponent tego demo.",
-      "wejscia": ["zasilanie 24 V", "sygnał otwórz", "sygnał zamknij", "sygnał analogowy"],
-      "wyjscia": ["pozycja %", "otwarty", "zamknięty", "sygnał zwrotny"],
-      "bledy": ["brak zasilania", "blokada mechaniczna", "sprzeczne sygnały", "brak sprzężenia z osią"],
+      "wejscia": [
+        "zasilanie 24 V",
+        "sygnał otwórz",
+        "sygnał zamknij",
+        "sygnał analogowy"
+      ],
+      "wyjscia": [
+        "pozycja %",
+        "otwarty",
+        "zamknięty",
+        "sygnał zwrotny"
+      ],
+      "bledy": [
+        "brak zasilania",
+        "blokada mechaniczna",
+        "sprzeczne sygnały",
+        "brak sprzężenia z osią"
+      ],
       "lokalizacja": "Na przepustnicy nawiewu / kanał przy agregacie",
-      "pozycja": [2.25, 0.25, 0.0],
-      "rozmiar": [0.28, 0.28, 0.42],
-      "kolor": "#ff7a1a"
+      "pozycja": [
+        2.25,
+        0.25,
+        0.0
+      ],
+      "rozmiar": [
+        0.28,
+        0.28,
+        0.42
+      ],
+      "kolor": "#ff7a1a",
+      "model3d": "./assets/modele/silownik_belimo/asd_github_ready.glb",
+      "metadaneModelu": "./assets/metadane/asd_github_ready.json",
+      "dokumentacja": [
+        "./assets/silownik-infografika.png"
+      ],
+      "uwagi": "Model GLB przygotowany do Three.js i GitHub Pages."
     },
     {
       "id": "sensor-01",
       "nazwa": "Czujnik temperatury",
       "typ": "CzujnikTemperatury",
       "opis": "Dostarcza temperaturę powietrza do automatyki i może generować alarmy pomiarowe.",
-      "wejscia": ["medium pomiarowe"],
-      "wyjscia": ["temperatura", "status czujnika"],
+      "wejscia": [
+        "medium pomiarowe"
+      ],
+      "wyjscia": [
+        "temperatura",
+        "status czujnika"
+      ],
       "bledy": [],
       "lokalizacja": "Kanał nawiewny za agregatem",
-      "pozycja": [3.0, 0.1, 0.0],
-      "rozmiar": [0.12, 0.12, 0.45],
+      "pozycja": [
+        3.0,
+        0.1,
+        0.0
+      ],
+      "rozmiar": [
+        0.12,
+        0.12,
+        0.45
+      ],
       "kolor": "#ab47bc"
     },
     {
@@ -109,12 +237,27 @@
       "nazwa": "Sterownik automatyki",
       "typ": "Sterownik",
       "opis": "Logika nadrzędna wysyłająca sygnały do siłownika i zbierająca alarmy z instalacji.",
-      "wejscia": ["status czujników", "potwierdzenia pracy"],
-      "wyjscia": ["sygnał otwórz", "sygnał zamknij", "alarm ogólny"],
+      "wejscia": [
+        "status czujników",
+        "potwierdzenia pracy"
+      ],
+      "wyjscia": [
+        "sygnał otwórz",
+        "sygnał zamknij",
+        "alarm ogólny"
+      ],
       "bledy": [],
       "lokalizacja": "Szafa sterownicza przy agregacie",
-      "pozycja": [3.4, 1.0, -0.1],
-      "rozmiar": [0.5, 0.75, 0.18],
+      "pozycja": [
+        3.4,
+        1.0,
+        -0.1
+      ],
+      "rozmiar": [
+        0.5,
+        0.75,
+        0.18
+      ],
       "kolor": "#26a69a"
     }
   ]

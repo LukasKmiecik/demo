@@ -1,5 +1,6 @@
 import * as THREE from 'https://unpkg.com/three@0.180.0/build/three.module.js';
 import { OrbitControls } from 'https://unpkg.com/three@0.180.0/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://unpkg.com/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
 
 const canvas = document.getElementById('viewer');
 const lista = document.getElementById('lista-komponentow');
@@ -55,6 +56,7 @@ scene.add(room);
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
+const gltfLoader = new GLTFLoader();
 
 function resize() {
   const wrap = canvas.parentElement;
@@ -138,34 +140,17 @@ function selectComponent(id) {
   updateDetails(komp);
 }
 
-function createMesh(komp) {
+function createFallbackGroup(komp) {
   const [sx, sy, sz] = komp.rozmiar;
   let geometry;
 
   switch (komp.typ) {
     case 'Wentylator':
-      geometry = new THREE.CylinderGeometry(sx / 2, sx / 2, sz, 32);
-      break;
     case 'Silnik':
       geometry = new THREE.CylinderGeometry(sx / 2, sx / 2, sz, 24);
       break;
-    case 'PasekKlinowy':
-      geometry = new THREE.BoxGeometry(sx, sy, sz);
-      break;
-    case 'FiltrPowietrza':
-      geometry = new THREE.BoxGeometry(sx, sy, sz);
-      break;
-    case 'Przepustnica':
-      geometry = new THREE.BoxGeometry(sx, sy, sz);
-      break;
-    case 'SilownikPrzepustnicyBelimo':
-      geometry = new THREE.BoxGeometry(sx, sy, sz);
-      break;
     case 'CzujnikTemperatury':
       geometry = new THREE.CylinderGeometry(sx / 2, sx / 2, sz, 18);
-      break;
-    case 'Sterownik':
-      geometry = new THREE.BoxGeometry(sx, sy, sz);
       break;
     default:
       geometry = new THREE.BoxGeometry(sx, sy, sz);
@@ -192,6 +177,30 @@ function createMesh(komp) {
     );
     axle.rotation.z = Math.PI / 2;
     group.add(axle);
+  }
+
+  return group;
+}
+
+async function createMesh(komp) {
+  let group;
+
+  if (komp.model3d) {
+    try {
+      const gltf = await gltfLoader.loadAsync(komp.model3d);
+      group = new THREE.Group();
+      const model = gltf.scene;
+      model.scale.set(0.008, 0.008, 0.008);
+      if (komp.typ === 'SilownikPrzepustnicyBelimo') {
+        model.rotation.y = Math.PI / 2;
+      }
+      group.add(model);
+    } catch (error) {
+      console.warn(`Nie udało się wczytać modelu ${komp.model3d}, używam bryły zastępczej.`, error);
+      group = createFallbackGroup(komp);
+    }
+  } else {
+    group = createFallbackGroup(komp);
   }
 
   group.position.set(...komp.pozycja);
@@ -246,7 +255,7 @@ async function init() {
   const data = await res.json();
   state.komponenty = data.komponenty;
   renderList();
-  state.komponenty.forEach(createMesh);
+  await Promise.all(state.komponenty.map(createMesh));
   selectComponent('actuator-01');
   animate();
 }

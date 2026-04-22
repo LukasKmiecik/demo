@@ -1,0 +1,44 @@
+{
+  "source_file": "asd.stl",
+  "output_file": "asd_github_ready.glb",
+  "coordinate_system": "Three.js friendly (Y-up, model placed on ground)",
+  "dimensions": {
+    "x": 68.45333099365234,
+    "y": 124.38226509094238,
+    "z": 59.37919235229493
+  },
+  "bounds": {
+    "min": [
+      -34.22666549682617,
+      0.0,
+      -29.689596176147464
+    ],
+    "max": [
+      34.22666549682617,
+      124.38226509094238,
+      29.689596176147464
+    ]
+  },
+  "vertex_count": 329,
+  "face_count": 664,
+  "watertight": false,
+  "suggested_component_name": "SilownikPrzepustnicyBelimoModel",
+  "threejs": {
+    "path": "./assets/modele/silownik_belimo/asd_github_ready.glb",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ]
+  }
+}
