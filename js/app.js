@@ -1,7 +1,5 @@
 import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
 import { OrbitControls } from 'https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'https://unpkg.com/three@0.161.0/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'https://unpkg.com/three@0.161.0/examples/jsm/loaders/DRACOLoader.js';
 
 const viewer = document.getElementById('viewer3d');
 const statusEl = document.getElementById('statusModelu');
@@ -16,7 +14,7 @@ camera.position.set(6, 5, 8);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.setSize(100, 100);
 viewer.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -56,32 +54,46 @@ function ustawListeDanych(containerId, dane) {
     dt.textContent = klucz;
 
     const dd = document.createElement('dd');
-    if (String(klucz).toLowerCase() === 'status') {
-      const badge = document.createElement('span');
-      badge.className = 'badge';
-      badge.textContent = wartosc;
-      dd.appendChild(badge);
-    } else {
-      dd.textContent = wartosc;
-    }
+    dd.textContent = wartosc;
 
     container.appendChild(dt);
     container.appendChild(dd);
   });
 }
 
-function wypelnijPanel(dane) {
-  document.getElementById('nazwaObiektu').textContent = dane.nazwa || 'Obiekt';
-  document.getElementById('opisObiektu').textContent = dane.opis || '';
-  ustawListeDanych('danePodstawowe', dane.danePodstawowe || {});
-  ustawListeDanych('daneKontaktowe', dane.daneKontaktowe || {});
-  ustawListeDanych('daneDostepu', dane.daneDostepu || {});
+function wypelnijPanel() {
+  document.getElementById('nazwaObiektu').textContent = 'Willa Parkowa 10';
+  document.getElementById('opisObiektu').textContent =
+    'Demo obiektu: budynek jako pierwszy poziom systemu serwisowego 3D.';
+
+  ustawListeDanych('danePodstawowe', {
+    'Typ': 'Budynek',
+    'Adres': 'Willa Parkowa 10',
+    'Status': 'Aktywny'
+  });
+
+  ustawListeDanych('daneKontaktowe', {
+    'Kontakt': 'Serwis główny',
+    'Telefon': '+47 000 00 000',
+    'Email': 'serwis@demo.no'
+  });
+
+  ustawListeDanych('daneDostepu', {
+    'Kod drzwi': '1234',
+    'Wejście': 'Główne',
+    'Uwagi': 'Dostęp po zgłoszeniu'
+  });
 
   const notatkiLista = document.getElementById('notatkiLista');
   notatkiLista.innerHTML = '';
-  (dane.notatki || []).forEach((notatka) => {
+
+  [
+    'To jest etap 1: sam budynek i informacje.',
+    'Następny etap: dodać agregat jako osobny model.',
+    'Potem: połączenie budynek → agregat → komponenty.'
+  ].forEach((tekst) => {
     const li = document.createElement('li');
-    li.textContent = notatka;
+    li.textContent = tekst;
     notatkiLista.appendChild(li);
   });
 }
@@ -104,69 +116,34 @@ function dopasujWidokDoObiektu(obiekt) {
   initialTarget = center.clone();
 }
 
-function pokazPlaceholder() {
-  const placeholder = new THREE.Mesh(
-    new THREE.BoxGeometry(4, 2.6, 3),
-    new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8 })
+function pokazModelTestowy() {
+  const grupa = new THREE.Group();
+
+  const bryla = new THREE.Mesh(
+    new THREE.BoxGeometry(6, 3, 4),
+    new THREE.MeshStandardMaterial({
+      color: 0x64748b,
+      roughness: 0.8,
+      metalness: 0.1
+    })
   );
-  placeholder.position.y = 1.3;
-  modelRoot = placeholder;
-  scene.add(placeholder);
-  dopasujWidokDoObiektu(placeholder);
-}
+  bryla.position.y = 1.5;
+  grupa.add(bryla);
 
-function loadAsyncWithTimeout(loader, path, ms = 12000) {
-  return Promise.race([
-    loader.loadAsync(path),
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Przekroczono czas ładowania modelu')), ms)
-    )
-  ]);
-}
+  const dach = new THREE.Mesh(
+    new THREE.ConeGeometry(4.8, 1.8, 4),
+    new THREE.MeshStandardMaterial({
+      color: 0x92400e,
+      roughness: 0.9
+    })
+  );
+  dach.position.y = 3.9;
+  dach.rotation.y = Math.PI / 4;
+  grupa.add(dach);
 
-async function wczytajModelBezDraco(path) {
-  const loader = new GLTFLoader();
-  return loadAsyncWithTimeout(loader, path, 12000);
-}
-
-async function wczytajModelZDraco(path) {
-  const loader = new GLTFLoader();
-  const dracoLoader = new DRACOLoader();
-
-  dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-  loader.setDRACOLoader(dracoLoader);
-
-  return loadAsyncWithTimeout(loader, path, 12000);
-}
-
-async function wczytajModel(path) {
-  statusEl.textContent = 'Ładowanie modelu...';
-
-  try {
-    const gltf = await wczytajModelBezDraco(path);
-    modelRoot = gltf.scene;
-    scene.add(modelRoot);
-    dopasujWidokDoObiektu(modelRoot);
-    statusEl.textContent = 'Model załadowany poprawnie';
-    return;
-  } catch (errorBezDraco) {
-    console.warn('Ładowanie bez Draco nie powiodło się:', errorBezDraco);
-  }
-
-  try {
-    statusEl.textContent = 'Próba ładowania z dekoderem Draco...';
-    const gltf = await wczytajModelZDraco(path);
-    modelRoot = gltf.scene;
-    scene.add(modelRoot);
-    dopasujWidokDoObiektu(modelRoot);
-    statusEl.textContent = 'Model Draco załadowany poprawnie';
-    return;
-  } catch (errorZDraco) {
-    console.error('Ładowanie z Draco nie powiodło się:', errorZDraco);
-  }
-
-  statusEl.textContent = 'Nie udało się załadować modelu — pokazuję widok zastępczy';
-  pokazPlaceholder();
+  modelRoot = grupa;
+  scene.add(grupa);
+  dopasujWidokDoObiektu(grupa);
 }
 
 resetBtn.addEventListener('click', () => {
@@ -187,19 +164,12 @@ function animuj() {
   renderer.render(scene, camera);
 }
 
-async function start() {
+function start() {
   ustawRozmiar();
+  wypelnijPanel();
+  pokazModelTestowy();
+  statusEl.textContent = 'Model testowy załadowany poprawnie';
   animuj();
-
-  const response = await fetch('./dane/obiekt.json');
-  const dane = await response.json();
-  wypelnijPanel(dane);
-
-  await wczytajModel(dane.model3d);
 }
 
-start().catch((error) => {
-  console.error(error);
-  statusEl.textContent = 'Błąd uruchamiania strony';
-  pokazPlaceholder();
-});
+start();
