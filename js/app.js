@@ -23,8 +23,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.target.set(0, 1, 0);
 
-const hemi = new THREE.HemisphereLight(0xffffff, 0x334155, 1.2);
-scene.add(hemi);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x334155, 1.2));
 
 const dir = new THREE.DirectionalLight(0xffffff, 1.5);
 dir.position.set(8, 14, 10);
@@ -34,16 +33,15 @@ const grid = new THREE.GridHelper(40, 40, 0x475569, 0x1e293b);
 grid.position.y = -0.001;
 scene.add(grid);
 
-const axes = new THREE.AxesHelper(2);
-scene.add(axes);
+scene.add(new THREE.AxesHelper(2));
 
 let modelRoot = null;
 let initialCameraPosition = new THREE.Vector3(6, 5, 8);
 let initialTarget = new THREE.Vector3(0, 1, 0);
 
 function ustawRozmiar() {
-  const width = viewer.clientWidth;
-  const height = viewer.clientHeight;
+  const width = viewer.clientWidth || 800;
+  const height = viewer.clientHeight || 600;
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
@@ -58,7 +56,7 @@ function ustawListeDanych(containerId, dane) {
     dt.textContent = klucz;
 
     const dd = document.createElement('dd');
-    if (klucz.toLowerCase() === 'status') {
+    if (String(klucz).toLowerCase() === 'status') {
       const badge = document.createElement('span');
       badge.className = 'badge';
       badge.textContent = wartosc;
@@ -93,7 +91,7 @@ function dopasujWidokDoObiektu(obiekt) {
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
 
-  const maxDim = Math.max(size.x, size.y, size.z);
+  const maxDim = Math.max(size.x, size.y, size.z) || 1;
   const fov = camera.fov * (Math.PI / 180);
   let distance = maxDim / (2 * Math.tan(fov / 2));
   distance *= 1.7;
@@ -106,33 +104,69 @@ function dopasujWidokDoObiektu(obiekt) {
   initialTarget = center.clone();
 }
 
-async function wczytajModel(path) {
-  statusEl.textContent = 'Ładowanie modelu GLB...';
+function pokazPlaceholder() {
+  const placeholder = new THREE.Mesh(
+    new THREE.BoxGeometry(4, 2.6, 3),
+    new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8 })
+  );
+  placeholder.position.y = 1.3;
+  modelRoot = placeholder;
+  scene.add(placeholder);
+  dopasujWidokDoObiektu(placeholder);
+}
 
+function loadAsyncWithTimeout(loader, path, ms = 12000) {
+  return Promise.race([
+    loader.loadAsync(path),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Przekroczono czas ładowania modelu')), ms)
+    )
+  ]);
+}
+
+async function wczytajModelBezDraco(path) {
+  const loader = new GLTFLoader();
+  return loadAsyncWithTimeout(loader, path, 12000);
+}
+
+async function wczytajModelZDraco(path) {
   const loader = new GLTFLoader();
   const dracoLoader = new DRACOLoader();
+
   dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
   loader.setDRACOLoader(dracoLoader);
 
+  return loadAsyncWithTimeout(loader, path, 12000);
+}
+
+async function wczytajModel(path) {
+  statusEl.textContent = 'Ładowanie modelu...';
+
   try {
-    const gltf = await loader.loadAsync(path);
+    const gltf = await wczytajModelBezDraco(path);
     modelRoot = gltf.scene;
     scene.add(modelRoot);
     dopasujWidokDoObiektu(modelRoot);
     statusEl.textContent = 'Model załadowany poprawnie';
-  } catch (error) {
-    console.error(error);
-    statusEl.textContent = 'Nie udało się załadować modelu';
-
-    const placeholder = new THREE.Mesh(
-      new THREE.BoxGeometry(4, 2.6, 3),
-      new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8 })
-    );
-    placeholder.position.y = 1.3;
-    modelRoot = placeholder;
-    scene.add(placeholder);
-    dopasujWidokDoObiektu(placeholder);
+    return;
+  } catch (errorBezDraco) {
+    console.warn('Ładowanie bez Draco nie powiodło się:', errorBezDraco);
   }
+
+  try {
+    statusEl.textContent = 'Próba ładowania z dekoderem Draco...';
+    const gltf = await wczytajModelZDraco(path);
+    modelRoot = gltf.scene;
+    scene.add(modelRoot);
+    dopasujWidokDoObiektu(modelRoot);
+    statusEl.textContent = 'Model Draco załadowany poprawnie';
+    return;
+  } catch (errorZDraco) {
+    console.error('Ładowanie z Draco nie powiodło się:', errorZDraco);
+  }
+
+  statusEl.textContent = 'Nie udało się załadować modelu — pokazuję widok zastępczy';
+  pokazPlaceholder();
 }
 
 resetBtn.addEventListener('click', () => {
@@ -155,14 +189,17 @@ function animuj() {
 
 async function start() {
   ustawRozmiar();
+  animuj();
+
   const response = await fetch('./dane/obiekt.json');
   const dane = await response.json();
   wypelnijPanel(dane);
+
   await wczytajModel(dane.model3d);
-  animuj();
 }
 
 start().catch((error) => {
   console.error(error);
   statusEl.textContent = 'Błąd uruchamiania strony';
+  pokazPlaceholder();
 });
