@@ -1,266 +1,168 @@
-import * as THREE from 'https://unpkg.com/three@0.180.0/build/three.module.js';
-import { OrbitControls } from 'https://unpkg.com/three@0.180.0/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'https://unpkg.com/three@0.180.0/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://unpkg.com/three@0.161.0/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'https://unpkg.com/three@0.161.0/examples/jsm/loaders/DRACOLoader.js';
 
-const canvas = document.getElementById('viewer');
-const lista = document.getElementById('lista-komponentow');
-const detailName = document.getElementById('detail-name');
-const detailType = document.getElementById('detail-type');
-const detailDescription = document.getElementById('detail-description');
-const detailInputs = document.getElementById('detail-inputs');
-const detailOutputs = document.getElementById('detail-outputs');
-const detailErrors = document.getElementById('detail-errors');
-const detailLocation = document.getElementById('detail-location');
+const viewer = document.getElementById('viewer3d');
+const statusEl = document.getElementById('statusModelu');
+const resetBtn = document.getElementById('resetKameryBtn');
+const fitBtn = document.getElementById('pokazCalyModelBtn');
 
-const state = {
-  komponenty: [],
-  selectedId: null,
-  meshById: new Map(),
-  itemById: new Map(),
-};
-
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x101927);
-const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-camera.position.set(6.5, 4.5, 7.5);
+scene.background = new THREE.Color(0x0b1220);
 
-const controls = new OrbitControls(camera, canvas);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 5000);
+camera.position.set(6, 5, 8);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+viewer.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.target.set(0.6, 0.4, 0);
+controls.target.set(0, 1, 0);
 
-const ambient = new THREE.AmbientLight(0xffffff, 0.85);
-scene.add(ambient);
-const dir = new THREE.DirectionalLight(0xffffff, 1.1);
-dir.position.set(4, 8, 6);
+const hemi = new THREE.HemisphereLight(0xffffff, 0x334155, 1.2);
+scene.add(hemi);
+
+const dir = new THREE.DirectionalLight(0xffffff, 1.5);
+dir.position.set(8, 14, 10);
 scene.add(dir);
 
-const grid = new THREE.GridHelper(14, 14, 0x36527a, 0x23324d);
-grid.position.y = -1.2;
+const grid = new THREE.GridHelper(40, 40, 0x475569, 0x1e293b);
+grid.position.y = -0.001;
 scene.add(grid);
 
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(14, 14),
-  new THREE.MeshStandardMaterial({ color: 0x162234, metalness: 0.1, roughness: 0.9 })
-);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = -1.21;
-scene.add(floor);
+const axes = new THREE.AxesHelper(2);
+scene.add(axes);
 
-const room = new THREE.Mesh(
-  new THREE.BoxGeometry(10, 5, 6),
-  new THREE.MeshBasicMaterial({ color: 0x54719c, wireframe: true, transparent: true, opacity: 0.18 })
-);
-room.position.set(0.8, 1.2, 0);
-scene.add(room);
+let modelRoot = null;
+let initialCameraPosition = new THREE.Vector3(6, 5, 8);
+let initialTarget = new THREE.Vector3(0, 1, 0);
 
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-const gltfLoader = new GLTFLoader();
-
-function resize() {
-  const wrap = canvas.parentElement;
-  const width = wrap.clientWidth;
-  const height = 620;
-  renderer.setSize(width, height, false);
+function ustawRozmiar() {
+  const width = viewer.clientWidth;
+  const height = viewer.clientHeight;
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
-}
-window.addEventListener('resize', resize);
-
-function makeMaterial(color) {
-  return new THREE.MeshStandardMaterial({ color, roughness: 0.65, metalness: 0.22 });
+  renderer.setSize(width, height);
 }
 
-function addLabelLine(mesh, isSelected) {
-  mesh.traverse((obj) => {
-    if (obj.material?.emissive) {
-      obj.material.emissive.setHex(isSelected ? 0x553300 : 0x000000);
-      obj.material.emissiveIntensity = isSelected ? 0.9 : 0;
+function ustawListeDanych(containerId, dane) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+
+  Object.entries(dane).forEach(([klucz, wartosc]) => {
+    const dt = document.createElement('dt');
+    dt.textContent = klucz;
+
+    const dd = document.createElement('dd');
+    if (klucz.toLowerCase() === 'status') {
+      const badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = wartosc;
+      dd.appendChild(badge);
+    } else {
+      dd.textContent = wartosc;
     }
+
+    container.appendChild(dt);
+    container.appendChild(dd);
   });
 }
 
-function renderList() {
-  lista.innerHTML = '';
-  state.komponenty.forEach((komp) => {
-    const el = document.createElement('button');
-    el.className = 'component-item';
-    el.innerHTML = `<strong>${komp.nazwa}</strong><span class="type">${komp.typ}</span>`;
-    el.addEventListener('click', () => selectComponent(komp.id));
-    state.itemById.set(komp.id, el);
-    lista.appendChild(el);
+function wypelnijPanel(dane) {
+  document.getElementById('nazwaObiektu').textContent = dane.nazwa || 'Obiekt';
+  document.getElementById('opisObiektu').textContent = dane.opis || '';
+  ustawListeDanych('danePodstawowe', dane.danePodstawowe || {});
+  ustawListeDanych('daneKontaktowe', dane.daneKontaktowe || {});
+  ustawListeDanych('daneDostepu', dane.daneDostepu || {});
+
+  const notatkiLista = document.getElementById('notatkiLista');
+  notatkiLista.innerHTML = '';
+  (dane.notatki || []).forEach((notatka) => {
+    const li = document.createElement('li');
+    li.textContent = notatka;
+    notatkiLista.appendChild(li);
   });
 }
 
-function fillList(target, items, emptyText) {
-  target.innerHTML = '';
-  if (!items || items.length === 0) {
-    const li = document.createElement('li');
-    li.textContent = emptyText;
-    target.appendChild(li);
-    return;
-  }
-  items.forEach((item) => {
-    const li = document.createElement('li');
-    li.textContent = item;
-    target.appendChild(li);
-  });
+function dopasujWidokDoObiektu(obiekt) {
+  const box = new THREE.Box3().setFromObject(obiekt);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const fov = camera.fov * (Math.PI / 180);
+  let distance = maxDim / (2 * Math.tan(fov / 2));
+  distance *= 1.7;
+
+  camera.position.set(center.x + distance, center.y + distance * 0.55, center.z + distance);
+  controls.target.copy(center);
+  controls.update();
+
+  initialCameraPosition = camera.position.clone();
+  initialTarget = center.clone();
 }
 
-function updateDetails(komp) {
-  detailName.textContent = komp.nazwa;
-  detailType.textContent = komp.typ;
-  detailDescription.textContent = komp.opis;
-  detailLocation.textContent = komp.lokalizacja;
-  fillList(detailInputs, komp.wejscia, 'Brak zdefiniowanych wejść');
-  fillList(detailOutputs, komp.wyjscia, 'Brak zdefiniowanych wyjść');
+async function wczytajModel(path) {
+  statusEl.textContent = 'Ładowanie modelu GLB...';
 
-  detailErrors.innerHTML = '';
-  if (!komp.bledy || komp.bledy.length === 0) {
-    const li = document.createElement('li');
-    li.innerHTML = '<span class="status-dot"></span>Brak aktywnych błędów';
-    detailErrors.appendChild(li);
-  } else {
-    komp.bledy.forEach((err) => {
-      const li = document.createElement('li');
-      li.innerHTML = `<span class="status-dot error"></span>${err}`;
-      detailErrors.appendChild(li);
-    });
-  }
-}
+  const loader = new GLTFLoader();
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+  loader.setDRACOLoader(dracoLoader);
 
-function selectComponent(id) {
-  state.selectedId = id;
-  const komp = state.komponenty.find((item) => item.id === id);
-  if (!komp) return;
+  try {
+    const gltf = await loader.loadAsync(path);
+    modelRoot = gltf.scene;
+    scene.add(modelRoot);
+    dopasujWidokDoObiektu(modelRoot);
+    statusEl.textContent = 'Model załadowany poprawnie';
+  } catch (error) {
+    console.error(error);
+    statusEl.textContent = 'Nie udało się załadować modelu';
 
-  state.itemById.forEach((el, key) => el.classList.toggle('active', key === id));
-  state.meshById.forEach((mesh, key) => addLabelLine(mesh, key === id));
-  updateDetails(komp);
-}
-
-function createFallbackGroup(komp) {
-  const [sx, sy, sz] = komp.rozmiar;
-  let geometry;
-
-  switch (komp.typ) {
-    case 'Wentylator':
-    case 'Silnik':
-      geometry = new THREE.CylinderGeometry(sx / 2, sx / 2, sz, 24);
-      break;
-    case 'CzujnikTemperatury':
-      geometry = new THREE.CylinderGeometry(sx / 2, sx / 2, sz, 18);
-      break;
-    default:
-      geometry = new THREE.BoxGeometry(sx, sy, sz);
-  }
-
-  const group = new THREE.Group();
-  const mesh = new THREE.Mesh(geometry, makeMaterial(komp.kolor));
-  group.add(mesh);
-
-  if (komp.typ === 'SilownikPrzepustnicyBelimo') {
-    const axle = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.06, 0.06, 0.48, 18),
-      new THREE.MeshStandardMaterial({ color: 0xcfd8dc, roughness: 0.3, metalness: 0.8 })
+    const placeholder = new THREE.Mesh(
+      new THREE.BoxGeometry(4, 2.6, 3),
+      new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8 })
     );
-    axle.rotation.z = Math.PI / 2;
-    axle.position.set(0, 0.16, 0);
-    group.add(axle);
+    placeholder.position.y = 1.3;
+    modelRoot = placeholder;
+    scene.add(placeholder);
+    dopasujWidokDoObiektu(placeholder);
   }
-
-  if (komp.typ === 'Przepustnica') {
-    const axle = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.04, 0.04, 0.8, 16),
-      new THREE.MeshStandardMaterial({ color: 0xa7b6c8, roughness: 0.35, metalness: 0.7 })
-    );
-    axle.rotation.z = Math.PI / 2;
-    group.add(axle);
-  }
-
-  return group;
 }
 
-async function createMesh(komp) {
-  let group;
+resetBtn.addEventListener('click', () => {
+  camera.position.copy(initialCameraPosition);
+  controls.target.copy(initialTarget);
+  controls.update();
+});
 
-  if (komp.model3d) {
-    try {
-      const gltf = await gltfLoader.loadAsync(komp.model3d);
-      group = new THREE.Group();
-      const model = gltf.scene;
-      model.scale.set(0.008, 0.008, 0.008);
-      if (komp.typ === 'SilownikPrzepustnicyBelimo') {
-        model.rotation.y = Math.PI / 2;
-      }
-      group.add(model);
-    } catch (error) {
-      console.warn(`Nie udało się wczytać modelu ${komp.model3d}, używam bryły zastępczej.`, error);
-      group = createFallbackGroup(komp);
-    }
-  } else {
-    group = createFallbackGroup(komp);
-  }
+fitBtn.addEventListener('click', () => {
+  if (modelRoot) dopasujWidokDoObiektu(modelRoot);
+});
 
-  group.position.set(...komp.pozycja);
-  group.userData.componentId = komp.id;
-  state.meshById.set(komp.id, group);
-  scene.add(group);
-}
+window.addEventListener('resize', ustawRozmiar);
 
-function animate() {
-  requestAnimationFrame(animate);
+function animuj() {
+  requestAnimationFrame(animuj);
   controls.update();
   renderer.render(scene, camera);
 }
 
-function handlePointer(event) {
-  const rect = canvas.getBoundingClientRect();
-  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-  raycaster.setFromCamera(pointer, camera);
-  const intersects = raycaster.intersectObjects([...state.meshById.values()], true);
-  if (intersects.length > 0) {
-    let node = intersects[0].object;
-    while (node && !node.userData.componentId) node = node.parent;
-    if (node?.userData?.componentId) selectComponent(node.userData.componentId);
-  }
+async function start() {
+  ustawRozmiar();
+  const response = await fetch('./dane/obiekt.json');
+  const dane = await response.json();
+  wypelnijPanel(dane);
+  await wczytajModel(dane.model3d);
+  animuj();
 }
 
-canvas.addEventListener('click', handlePointer);
-
-document.querySelector('[data-action="reset-view"]').addEventListener('click', () => {
-  camera.position.set(6.5, 4.5, 7.5);
-  controls.target.set(0.6, 0.4, 0);
-});
-
-document.querySelector('[data-action="simulate-error"]').addEventListener('click', () => {
-  const actuator = state.komponenty.find((item) => item.id === 'actuator-01');
-  if (!actuator) return;
-  actuator.bledy = ['brak zasilania', 'blokada mechaniczna'];
-  selectComponent(actuator.id);
-});
-
-document.querySelector('[data-action="clear-error"]').addEventListener('click', () => {
-  const actuator = state.komponenty.find((item) => item.id === 'actuator-01');
-  if (!actuator) return;
-  actuator.bledy = [];
-  selectComponent(actuator.id);
-});
-
-async function init() {
-  resize();
-  const res = await fetch('./dane/komponenty-demo.json');
-  const data = await res.json();
-  state.komponenty = data.komponenty;
-  renderList();
-  await Promise.all(state.komponenty.map(createMesh));
-  selectComponent('actuator-01');
-  animate();
-}
-
-init().catch((err) => {
-  console.error(err);
-  detailDescription.textContent = 'Nie udało się wczytać danych demo.';
+start().catch((error) => {
+  console.error(error);
+  statusEl.textContent = 'Błąd uruchamiania strony';
 });

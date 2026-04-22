@@ -1,0 +1,31 @@
+{
+  "id": "budynek_willa_parkowa_10",
+  "nazwa": "Willa Parkowa 10",
+  "typ": "Budynek",
+  "status": "Wersja demo",
+  "model3d": "./assets/modele/budynek/willa_parkowa_10.glb",
+  "opis": "Pierwszy etap systemu serwisowego 3D. Po lewej stronie widoczny jest interaktywny model budynku, a po prawej podstawowe informacje serwisowe i organizacyjne. Ten sam układ później rozszerzymy o agregaty, urządzenia i konkretne komponenty.",
+  "danePodstawowe": {
+    "Adres": "Willa Parkowa 10",
+    "Typ obiektu": "Budynek / lokalizacja serwisowa",
+    "Numer obiektu": "WAH2151",
+    "Status": "Model załadowany do demo"
+  },
+  "daneKontaktowe": {
+    "Kontakt główny": "Do uzupełnienia",
+    "Telefon": "Do uzupełnienia",
+    "E-mail": "Do uzupełnienia",
+    "Firma serwisowa": "Do uzupełnienia"
+  },
+  "daneDostepu": {
+    "Kod do drzwi": "Do uzupełnienia",
+    "Dostęp techniczny": "Do uzupełnienia",
+    "Miejsce kluczy": "Do uzupełnienia",
+    "Uwagi BHP": "Do uzupełnienia"
+  },
+  "notatki": [
+    "Na tym etapie testujemy układ strony i wczytywanie modelu GLB Draco.",
+    "Kolejny krok: dodać model agregatu jako osobny obiekt lub jako element wewnątrz budynku.",
+    "Później można dodać klikane strefy, pomieszczenia, trasę dojścia i dokumentację PDF."
+  ]
+}

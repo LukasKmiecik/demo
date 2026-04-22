@@ -3,139 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Demo systemu serwisowego 3D v2</title>
+  <title>Demo serwisowe 3D - Budynek</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <header class="hero">
+  <header class="gora">
     <div>
-      <p class="eyebrow">Demo GitHub Pages v2</p>
-      <h1>System serwisowy instalacji HVAC</h1>
-      <p class="lead">
-        Wersja demonstracyjna pokazująca strukturę komponentów, uproszczony widok 3D agregatu,
-        panel błędów i kartę komponentu siłownika przepustnicy.
-      </p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="#scena">Przejdź do demo</a>
-        <a class="btn" href="#komponent">Zobacz komponent</a>
-      </div>
+      <h1>Demo systemu serwisowego 3D</h1>
+      <p class="podtytul">Etap 1: budynek jako obiekt z modelem 3D i panelem informacji</p>
     </div>
-    <div class="hero-card">
-      <div class="metric">
-        <span>Komponenty</span>
-        <strong>9</strong>
-      </div>
-      <div class="metric">
-        <span>Widoki</span>
-        <strong>3</strong>
-      </div>
-      <div class="metric">
-        <span>Tryb</span>
-        <strong>GitHub Pages</strong>
-      </div>
+    <div class="akcje">
+      <button id="resetKameryBtn" type="button">Reset widoku</button>
+      <button id="pokazCalyModelBtn" type="button">Pokaż cały model</button>
     </div>
   </header>
 
-  <main class="layout">
-    <section class="card scene-card" id="scena">
-      <div class="section-head">
-        <div>
-          <h2>Interaktywny widok demo</h2>
-          <p>Kliknij element na liście albo w scenie. Po prawej zobaczysz szczegóły i błędy.</p>
-        </div>
-        <div class="controls">
-          <button class="btn small" data-action="reset-view">Reset widoku</button>
-          <button class="btn small" data-action="simulate-error">Zasymuluj błąd siłownika</button>
-          <button class="btn small" data-action="clear-error">Wyczyść błąd</button>
-        </div>
+  <main class="uklad">
+    <section class="panel-modelu">
+      <div class="pasek-statusu">
+        <span id="statusModelu">Ładowanie modelu...</span>
       </div>
-
-      <div class="scene-layout">
-        <aside class="component-list">
-          <h3>Elementy demo</h3>
-          <div id="lista-komponentow"></div>
-        </aside>
-
-        <div class="viewer-wrap">
-          <canvas id="viewer"></canvas>
-          <div class="viewer-hint">Przytrzymaj i przeciągnij, aby obrócić widok</div>
-        </div>
-
-        <aside class="details-panel">
-          <h3 id="detail-name">Wybierz komponent</h3>
-          <p id="detail-type" class="muted">—</p>
-
-          <div class="detail-block">
-            <h4>Opis</h4>
-            <p id="detail-description">Kliknij element, aby zobaczyć jego opis.</p>
-          </div>
-
-          <div class="detail-grid">
-            <div class="detail-block">
-              <h4>Wejścia</h4>
-              <ul id="detail-inputs"></ul>
-            </div>
-            <div class="detail-block">
-              <h4>Wyjścia</h4>
-              <ul id="detail-outputs"></ul>
-            </div>
-          </div>
-
-          <div class="detail-block">
-            <h4>Błędy</h4>
-            <ul id="detail-errors"></ul>
-          </div>
-
-          <div class="detail-block">
-            <h4>Lokalizacja</h4>
-            <p id="detail-location">Pomieszczenie techniczne</p>
-          </div>
-        </aside>
+      <div id="viewer3d" aria-label="Widok modelu 3D"></div>
+      <div class="instrukcja">
+        <strong>Sterowanie:</strong> lewy przycisk myszy obrót, rolka przybliżenie, prawy przycisk przesunięcie.
       </div>
     </section>
 
-    <section class="card split-card" id="komponent">
-      <div>
-        <h2>Karta komponentu: siłownik przepustnicy</h2>
-        <p>
-          To przykładowy komponent bazowy do dalszej rozbudowy. W docelowym systemie jego model 3D,
-          logika, dokumentacja i konfiguracja są rozdzielone, ale powiązane jednym identyfikatorem.
-        </p>
-        <div class="chips">
-          <span>24 V AC/DC</span>
-          <span>kąt pracy 90°</span>
-          <span>wejścia / wyjścia</span>
-          <span>symulacja błędów</span>
-        </div>
+    <aside class="panel-informacji">
+      <div class="karta">
+        <h2 id="nazwaObiektu">Obiekt</h2>
+        <p id="opisObiektu" class="opis"></p>
       </div>
-      <img src="./assets/silownik-infografika.png" alt="Infografika siłownika przepustnicy" class="component-image" />
-    </section>
 
-    <section class="card files-card">
-      <h2>Proponowana struktura repozytorium</h2>
-      <pre><code>repozytorium-demo/
-├── index.html
-├── style.css
-├── js/
-│   └── app.js
-├── dane/
-│   └── komponenty-demo.json
-└── assets/
-    ├── silownik-infografika.png
-    ├── metadane/
-    │   └── asd_github_ready.json
-    └── modele/
-        └── silownik_belimo/
-            └── asd_github_ready.glb</code></pre>
-      <p class="muted">
-        Ta wersja jest przygotowana specjalnie pod GitHub Pages, więc działa jako statyczna strona bez backendu.
-      </p>
-    </section>
+      <div class="karta">
+        <h3>Dane podstawowe</h3>
+        <dl class="lista-danych" id="danePodstawowe"></dl>
+      </div>
+
+      <div class="karta">
+        <h3>Serwis i kontakt</h3>
+        <dl class="lista-danych" id="daneKontaktowe"></dl>
+      </div>
+
+      <div class="karta">
+        <h3>Dostęp i bezpieczeństwo</h3>
+        <dl class="lista-danych" id="daneDostepu"></dl>
+      </div>
+
+      <div class="karta">
+        <h3>Notatki</h3>
+        <ul id="notatkiLista" class="lista-notatek"></ul>
+      </div>
+    </aside>
   </main>
-
-  <footer class="footer">
-    <p>Demo przygotowane jako punkt startowy pod GitHub Pages. Następny etap: prawdziwe modele GLB i panel dokumentacji.</p>
-  </footer>
 
   <script type="module" src="./js/app.js"></script>
 </body>
