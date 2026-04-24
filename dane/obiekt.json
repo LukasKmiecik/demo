@@ -1,31 +1,78 @@
 {
-  "id": "budynek_willa_parkowa_10",
-  "nazwa": "Willa Parkowa 10",
-  "typ": "Budynek",
-  "status": "Wersja demo",
-  "model3d": "./assets/modele/budynek/willa_parkowa_10.glb",
-  "opis": "Pierwszy etap systemu serwisowego 3D. Po lewej stronie widoczny jest interaktywny model budynku, a po prawej podstawowe informacje serwisowe i organizacyjne. Ten sam układ później rozszerzymy o agregaty, urządzenia i konkretne komponenty.",
-  "danePodstawowe": {
-    "Adres": "Willa Parkowa 10",
-    "Typ obiektu": "Budynek / lokalizacja serwisowa",
-    "Numer obiektu": "WAH2151",
-    "Status": "Model załadowany do demo"
-  },
-  "daneKontaktowe": {
-    "Kontakt główny": "Do uzupełnienia",
-    "Telefon": "Do uzupełnienia",
-    "E-mail": "Do uzupełnienia",
-    "Firma serwisowa": "Do uzupełnienia"
-  },
-  "daneDostepu": {
-    "Kod do drzwi": "Do uzupełnienia",
-    "Dostęp techniczny": "Do uzupełnienia",
-    "Miejsce kluczy": "Do uzupełnienia",
-    "Uwagi BHP": "Do uzupełnienia"
-  },
-  "notatki": [
-    "Na tym etapie testujemy układ strony i wczytywanie modelu GLB Draco.",
-    "Kolejny krok: dodać model agregatu jako osobny obiekt lub jako element wewnątrz budynku.",
-    "Później można dodać klikane strefy, pomieszczenia, trasę dojścia i dokumentację PDF."
+  "obiekty": [
+    {
+      "id": "budynek_01",
+      "nazwa": "Budynek główny",
+      "typ": "budynek",
+      "model3d": "./assets/modele/budynek/willa_parkowa_10.glb",
+      "pozycja": [0, 0, 0],
+      "rotacja": [0, 0, 0],
+      "skala": [1, 1, 1],
+      "opis": "Główny obiekt budynku.",
+      "danePodstawowe": {
+        "Typ": "Budynek",
+        "Adres": "Willa Parkowa 10",
+        "Status": "Aktywny"
+      },
+      "daneKontaktowe": {
+        "Kontakt": "Jan Kowalski",
+        "Telefon": "+47 000 00 000",
+        "Email": "serwis@demo.no"
+      },
+      "daneDostepu": {
+        "Kod drzwi": "1234",
+        "Wejście": "Główne"
+      },
+      "notatki": [
+        "Obiekt główny systemu.",
+        "Kliknij, aby przejść głębiej."
+      ],
+      "dokumentacja": [
+        {
+          "nazwa": "Instrukcja obiektu",
+          "typ": "pdf",
+          "plik": "./assets/dokumentacja/budynek/instrukcja.pdf"
+        }
+      ]
+    },
+    {
+      "id": "agregat_ahu_01",
+      "nazwa": "Centrala wentylacyjna AHU-01",
+      "typ": "agregat",
+      "model3d": "./assets/modele/agregat/ahu_01.glb",
+      "pozycja": [8, 0, 0],
+      "rotacja": [0, 0, 0],
+      "skala": [1, 1, 1],
+      "opis": "Centrala nawiewno-wywiewna.",
+      "danePodstawowe": {
+        "Typ": "Agregat",
+        "Model": "AHU-01",
+        "Status": "Aktywny"
+      },
+      "daneKontaktowe": {
+        "Serwis": "Nexus Tech",
+        "Telefon": "+47 925 13 192"
+      },
+      "daneDostepu": {
+        "Pomieszczenie": "Techniczne 01",
+        "Dostęp": "Po zgłoszeniu"
+      },
+      "notatki": [
+        "Model demonstracyjny.",
+        "Docelowo wejście do komponentów."
+      ],
+      "dokumentacja": [
+        {
+          "nazwa": "Karta katalogowa",
+          "typ": "pdf",
+          "plik": "./assets/dokumentacja/agregat/karta.pdf"
+        },
+        {
+          "nazwa": "Raport serwisowy",
+          "typ": "pdf",
+          "plik": "./assets/dokumentacja/agregat/raport.pdf"
+        }
+      ]
+    }
   ]
 }
