@@ -3,60 +3,230 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Demo serwisowe 3D - Budynek</title>
+  <title>Platforma zarządzania budynkiem 3D</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <header class="gora">
-    <div>
-      <h1>Demo systemu serwisowego 3D</h1>
-      <p class="podtytul">Etap 1: budynek jako obiekt z modelem 3D i panelem informacji</p>
-    </div>
-    <div class="akcje">
-      <button id="resetKameryBtn" type="button">Reset widoku</button>
-      <button id="pokazCalyModelBtn" type="button">Pokaż cały model</button>
-    </div>
-  </header>
-
-  <main class="uklad">
-    <section class="panel-modelu">
-      <div class="pasek-statusu">
-        <span id="statusModelu">Ładowanie modelu...</span>
-      </div>
-      <div id="viewer3d" aria-label="Widok modelu 3D"></div>
-      <div class="instrukcja">
-        <strong>Sterowanie:</strong> lewy przycisk myszy obrót, rolka przybliżenie, prawy przycisk przesunięcie.
-      </div>
-    </section>
-
-    <aside class="panel-informacji">
-      <div class="karta">
-        <h2 id="nazwaObiektu">Obiekt</h2>
-        <p id="opisObiektu" class="opis"></p>
+  <div class="page-shell">
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Demo GitHub Pages</div>
+        <h1>Platforma zarządzania budynkiem 3D</h1>
+        <p class="hero-subtitle">Interaktywny model, dokumentacja, elementy i raporty w jednym miejscu.</p>
       </div>
 
-      <div class="karta">
-        <h3>Dane podstawowe</h3>
-        <dl class="lista-danych" id="danePodstawowe"></dl>
+      <div class="hero-cards">
+        <article class="hero-card">
+          <div class="hero-icon">◫</div>
+          <div>
+            <h3>Interaktywny model 3D</h3>
+            <p>Zobacz budynek z zewnątrz i wejdź do środka. Miejsce na model pozostaje puste do dalszego podłączenia.</p>
+          </div>
+        </article>
+        <article class="hero-card">
+          <div class="hero-icon">☰</div>
+          <div>
+            <h3>Pełna informacja</h3>
+            <p>Stan, opis, parametry, dokumentacja i notatki dostępne na każdym poziomie systemu.</p>
+          </div>
+        </article>
+        <article class="hero-card">
+          <div class="hero-icon">✓</div>
+          <div>
+            <h3>Kontrola i serwis</h3>
+            <p>Przeglądy, alarmy, historia i raporty serwisowe zebrane w jednym panelu.</p>
+          </div>
+        </article>
+        <article class="hero-card">
+          <div class="hero-icon">▤</div>
+          <div>
+            <h3>Raporty kwartalne</h3>
+            <p>Automatyczne raporty co 3 miesiące oraz historia zmian i działań serwisowych.</p>
+          </div>
+        </article>
       </div>
+    </header>
 
-      <div class="karta">
-        <h3>Serwis i kontakt</h3>
-        <dl class="lista-danych" id="daneKontaktowe"></dl>
-      </div>
+    <main class="app-window">
+      <aside class="sidebar">
+        <div class="brand">BIM•360</div>
+        <nav>
+          <button class="nav-item active">Model 3D</button>
+          <button class="nav-item">Dokumentacja</button>
+          <button class="nav-item">Elementy</button>
+          <button class="nav-item">Raporty</button>
+          <button class="nav-item">Historia</button>
+          <button class="nav-item">Ustawienia</button>
+        </nav>
 
-      <div class="karta">
-        <h3>Dostęp i bezpieczeństwo</h3>
-        <dl class="lista-danych" id="daneDostepu"></dl>
-      </div>
+        <div class="side-card compact">
+          <h4>Stan budynku</h4>
+          <dl>
+            <div><dt>Stan</dt><dd class="ok">aktywny</dd></div>
+            <div><dt>Przegląd</dt><dd class="ok">OK</dd></div>
+            <div><dt>Alarmy</dt><dd>0</dd></div>
+          </dl>
+        </div>
 
-      <div class="karta">
-        <h3>Notatki</h3>
-        <ul id="notatkiLista" class="lista-notatek"></ul>
-      </div>
-    </aside>
-  </main>
+        <div class="side-card compact">
+          <h4>Pogoda</h4>
+          <div class="weather">Warszawa <strong>18°C</strong><span>Zachmurzenie małe</span></div>
+        </div>
+      </aside>
 
-  <script type="module" src="./js/app.js"></script>
+      <section class="workspace">
+        <div class="topbar">
+          <div class="breadcrumbs">Budynek <span>›</span> Instalacje <span>›</span> Wentylacja <span>›</span> Centrala</div>
+          <div class="lang-user">
+            <div class="lang-switch">PL <span>|</span> NO <span>|</span> EN</div>
+            <div class="user-pill">Jan Kowalski <small>Administrator</small></div>
+          </div>
+        </div>
+
+        <section class="main-grid">
+          <div class="viewer-panel card">
+            <div class="viewer-toolbar left-note">Kliknij budynek, aby wejść do środka</div>
+            <div class="viewer-actions">
+              <button title="Widok domyślny">⌂</button>
+              <button title="Powiększ">＋</button>
+              <button title="Pomniejsz">－</button>
+              <button title="Warstwy">◫</button>
+              <button title="Mapa">◎</button>
+            </div>
+
+            <div class="viewer-placeholder" id="viewerPlaceholder">
+              <div class="placeholder-grid"></div>
+              <div class="placeholder-building">
+                <div class="placeholder-badge">MIEJSCE NA MODEL 3D</div>
+                <p>Tu będzie osadzony model budynku lub instalacji.</p>
+              </div>
+            </div>
+
+            <div class="viewer-footer-actions">
+              <button class="ghost-btn">Wejdź głębiej<br><span>Zobacz wnętrze budynku</span></button>
+              <button class="ghost-btn">Powrót</button>
+              <button class="ghost-btn">Wyjdź z modelu<br><span>Powrót do listy budynków</span></button>
+            </div>
+          </div>
+
+          <aside class="details-panel card">
+            <div class="status-row">
+              <div>
+                <h2>Centrala wentylacyjna AHU-01</h2>
+                <div class="status-badges">
+                  <span class="badge ok">Stan: aktywny</span>
+                  <span class="badge ok">Przegląd: OK</span>
+                  <span class="badge">Alarmy: 0</span>
+                </div>
+              </div>
+            </div>
+
+            <section class="detail-block">
+              <h3>Opis</h3>
+              <p>Centrala wentylacyjna nawiewno-wywiewna z odzyskiem ciepła obsługująca budynek biurowy. Przeznaczona do obsługi stref biurowych.</p>
+            </section>
+
+            <section class="detail-block">
+              <h3>Dane techniczne</h3>
+              <dl class="detail-list">
+                <div><dt>Producent</dt><dd>Systemair</dd></div>
+                <div><dt>Model</dt><dd>Generic 12</dd></div>
+                <div><dt>Numer seryjny</dt><dd>AHU-01-2022-045</dd></div>
+                <div><dt>Wydajność</dt><dd>12 000 m³/h</dd></div>
+                <div><dt>Zasilanie</dt><dd>400 V / 50 Hz</dd></div>
+                <div><dt>Moc</dt><dd>7.5 kW</dd></div>
+              </dl>
+            </section>
+
+            <section class="detail-block">
+              <h3>Przeglądy i serwis</h3>
+              <dl class="detail-list">
+                <div><dt>Ostatni przegląd</dt><dd>15.04.2024</dd></div>
+                <div><dt>Następny serwis</dt><dd>15.07.2024</dd></div>
+              </dl>
+            </section>
+
+            <section class="detail-block links-block">
+              <button class="text-link">Dokumentacja</button>
+              <button class="text-link">Historia</button>
+              <button class="text-link">Raport serwisowy</button>
+              <button class="text-link">Zdjęcia</button>
+              <button class="text-link">Parametry</button>
+            </section>
+          </aside>
+        </section>
+
+        <section class="lower-grid">
+          <div class="bottom-card card">
+            <div class="section-head">
+              <h3>Dokumentacja</h3>
+              <a href="#">Zobacz wszystkie</a>
+            </div>
+            <div class="doc-grid">
+              <article class="doc-item pdf"><strong>Instrukcja obsługi</strong><span>Centrala AHU-01</span><small>PDF • 2.1 MB</small></article>
+              <article class="doc-item"><strong>Schemat ideowy</strong><span>AHU-01</span><small>PDF • 1.3 MB</small></article>
+              <article class="doc-item"><strong>Karta katalogowa</strong><span>AHU-01</span><small>PDF • 1.8 MB</small></article>
+              <article class="doc-item"><strong>Certyfikat zgodności</strong><span>AHU-01</span><small>PDF • 0.9 MB</small></article>
+              <article class="doc-item add"><strong>Dodaj dokument</strong><span>Przeciągnij lub kliknij</span></article>
+            </div>
+          </div>
+
+          <div class="bottom-card card">
+            <div class="section-head">
+              <h3>Raporty kwartalne (co 3 miesiące)</h3>
+              <a href="#">Zobacz wszystkie</a>
+            </div>
+            <div class="report-timeline">
+              <div class="timeline-line"></div>
+              <article class="report-item done">
+                <strong>Raport Q1 2024</strong>
+                <span>01.01.2024 – 31.03.2024</span>
+              </article>
+              <article class="report-item done">
+                <strong>Raport Q2 2024</strong>
+                <span>01.04.2024 – 30.06.2024</span>
+              </article>
+              <article class="report-item active">
+                <strong>Raport Q3 2024</strong>
+                <span>01.07.2024 – 30.09.2024</span>
+              </article>
+              <article class="report-item">
+                <strong>Raport Q4 2024</strong>
+                <span>01.10.2024 – 31.12.2024</span>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="history-table card">
+          <div class="section-head">
+            <h3>Historia / Ostatnie zdarzenia</h3>
+            <a href="#">Zobacz pełną historię</a>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Typ</th>
+                  <th>Opis</th>
+                  <th>Element</th>
+                  <th>Użytkownik</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>15.04.2024 10:22</td><td>Przegląd</td><td>Przegląd techniczny – wynik OK</td><td>Centrala AHU-01</td><td>Piotr Nowak</td></tr>
+                <tr><td>12.04.2024 09:15</td><td>Serwis</td><td>Wymiana filtra nawiewu</td><td>Centrala AHU-01</td><td>Piotr Nowak</td></tr>
+                <tr><td>05.04.2024 14:33</td><td>Zmiana parametru</td><td>Zmiana przepływu nawiewu z 10 000 na 12 000 m³/h</td><td>Centrala AHU-01</td><td>Jan Kowalski</td></tr>
+                <tr><td>01.04.2024 08:00</td><td>Raport kwartalny</td><td>Raport Q2 2024 – instalacje wentylacyjne</td><td>Budynek</td><td>System</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
 </body>
 </html>
