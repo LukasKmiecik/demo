@@ -1,5 +1,6 @@
 import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
 import { OrbitControls } from 'https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://unpkg.com/three@0.161.0/examples/jsm/loaders/GLTFLoader.js';
 
 const viewer = document.getElementById('viewer3d');
 const statusEl = document.getElementById('statusModelu');
@@ -16,7 +17,7 @@ scene.background = new THREE.Color(0xe8f1ff);
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 5000);
 camera.position.set(18, 12, 18);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 viewer.appendChild(renderer.domElement);
 
@@ -40,21 +41,22 @@ scene.add(grid);
 
 const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(60, 60),
-  new THREE.MeshStandardMaterial({
-    color: 0xf4f8ff,
-    roughness: 1
-  })
+  new THREE.MeshStandardMaterial({ color: 0xf4f8ff, roughness: 1 })
 );
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = -0.01;
 scene.add(floor);
 
-let obiektGlowny = null;
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const loader = new GLTFLoader();
+
 let initialCameraPosition = new THREE.Vector3();
 let initialTarget = new THREE.Vector3();
 
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+const obiektySceny = [];
+const mapaObiektow = new Map();
+let wybranyObiektId = null;
 
 function ustawRozmiar() {
   const width = viewer.clientWidth || 800;
@@ -64,7 +66,7 @@ function ustawRozmiar() {
   renderer.setSize(width, height);
 }
 
-function ustawListeDanych(containerId, dane) {
+function ustawListeDanych(containerId, dane = {}) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
 
@@ -80,41 +82,49 @@ function ustawListeDanych(containerId, dane) {
   });
 }
 
-function wypelnijPanel() {
-  document.getElementById('nazwaObiektu').textContent = 'Willa Parkowa 10';
-  document.getElementById('opisObiektu').textContent =
-    'To jest interaktywna przestrzeń przygotowana pod przyszły model GLB budynku. Na razie działa placeholder i sterowanie kamerą.';
+function ustawDokumentacje(listaDokumentow = []) {
+  let sekcja = document.getElementById('sekcjaDokumentacji');
 
-  ustawListeDanych('danePodstawowe', {
-    'Typ': 'Budynek',
-    'Adres': 'Willa Parkowa 10',
-    'Status': 'Aktywny'
-  });
+  if (!sekcja) {
+    sekcja = document.createElement('section');
+    sekcja.className = 'karta';
+    sekcja.id = 'sekcjaDokumentacji';
+    sekcja.innerHTML = '<h3>Dokumentacja</h3><ul id="listaDokumentacji" class="lista-notatek"></ul>';
+    document.querySelector('.panel-prawy').appendChild(sekcja);
+  }
 
-  ustawListeDanych('daneKontaktowe', {
-    'Kontakt': 'Jan Kowalski',
-    'Telefon': '+47 000 00 000',
-    'Email': 'serwis@demo.no'
-  });
+  const lista = document.getElementById('listaDokumentacji');
+  lista.innerHTML = '';
 
-  ustawListeDanych('daneDostepu', {
-    'Kod drzwi': '1234',
-    'Wejście': 'Główne',
-    'Uprawnienia': 'Serwis + administrator'
+  listaDokumentow.forEach((dok) => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = dok.plik;
+    a.textContent = dok.nazwa;
+    a.target = '_blank';
+    li.appendChild(a);
+    lista.appendChild(li);
   });
+}
+
+function wypelnijPanel(obiekt) {
+  document.getElementById('nazwaObiektu').textContent = obiekt.nazwa || 'Obiekt';
+  document.getElementById('opisObiektu').textContent = obiekt.opis || '';
+
+  ustawListeDanych('danePodstawowe', obiekt.danePodstawowe || {});
+  ustawListeDanych('daneKontaktowe', obiekt.daneKontaktowe || {});
+  ustawListeDanych('daneDostepu', obiekt.daneDostepu || {});
 
   const notatki = document.getElementById('notatkiLista');
   notatki.innerHTML = '';
 
-  [
-    'Miejsce na model GLB budynku.',
-    'Kolejny krok: podpięcie prawdziwego modelu.',
-    'Potem: wejście do wnętrza i przejście do agregatu.'
-  ].forEach((tekst) => {
+  (obiekt.notatki || []).forEach((tekst) => {
     const li = document.createElement('li');
     li.textContent = tekst;
     notatki.appendChild(li);
   });
+
+  ustawDokumentacje(obiekt.dokumentacja || []);
 }
 
 function zapamietajWidok() {
@@ -122,8 +132,8 @@ function zapamietajWidok() {
   initialTarget.copy(controls.target);
 }
 
-function dopasujWidokDoObiektu(obiekt) {
-  const box = new THREE.Box3().setFromObject(obiekt);
+function dopasujWidokDoObiektu(obiekt3d) {
+  const box = new THREE.Box3().setFromObject(obiekt3d);
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
 
@@ -135,63 +145,134 @@ function dopasujWidokDoObiektu(obiekt) {
   camera.position.set(center.x + distance, center.y + distance * 0.6, center.z + distance);
   controls.target.copy(center);
   controls.update();
-
-  zapamietajWidok();
 }
 
-function stworzPlaceholderBudynku() {
+function ustawPrzezroczystoscDlaModelu(model, opacity) {
+  model.traverse((child) => {
+    if (child.isMesh) {
+      if (!child.userData.materialOriginal) {
+        child.userData.materialOriginal = child.material;
+      }
+
+      if (Array.isArray(child.material)) {
+        child.material.forEach((mat) => {
+          mat.transparent = opacity < 1;
+          mat.opacity = opacity;
+        });
+      } else if (child.material) {
+        child.material.transparent = opacity < 1;
+        child.material.opacity = opacity;
+      }
+    }
+  });
+}
+
+function wyciszReszteSceny(wybranyId) {
+  obiektySceny.forEach((ob) => {
+    if (!ob.model) return;
+
+    if (ob.id === wybranyId) {
+      ustawPrzezroczystoscDlaModelu(ob.model, 1);
+    } else {
+      ustawPrzezroczystoscDlaModelu(ob.model, 0.15);
+    }
+  });
+}
+
+function przywrocWidocznoscWszystkich() {
+  obiektySceny.forEach((ob) => {
+    if (ob.model) ustawPrzezroczystoscDlaModelu(ob.model, 1);
+  });
+}
+
+function zaznaczObiekt(id) {
+  const obiekt = mapaObiektow.get(id);
+  if (!obiekt || !obiekt.model) return;
+
+  wybranyObiektId = id;
+  wypelnijPanel(obiekt);
+  dopasujWidokDoObiektu(obiekt.model);
+  wyciszReszteSceny(id);
+  statusEl.textContent = `Wybrano obiekt: ${obiekt.nazwa}`;
+}
+
+function stworzPlaceholder(obiekt) {
   const grupa = new THREE.Group();
 
   const bryla = new THREE.Mesh(
-    new THREE.BoxGeometry(12, 6, 8),
+    new THREE.BoxGeometry(4, 3, 3),
     new THREE.MeshStandardMaterial({
-      color: 0x7f8ea6,
+      color: obiekt.typ === 'budynek' ? 0x7f8ea6 : 0x5b8def,
       roughness: 0.85,
       metalness: 0.08
     })
   );
-  bryla.position.y = 3;
-  bryla.name = 'Budynek';
+  bryla.position.y = 1.5;
+  bryla.name = obiekt.nazwa;
   grupa.add(bryla);
 
-  const dach = new THREE.Mesh(
-    new THREE.BoxGeometry(12.4, 0.4, 8.4),
-    new THREE.MeshStandardMaterial({
-      color: 0xc8d4e8,
-      roughness: 0.9
-    })
-  );
-  dach.position.y = 6.2;
-  grupa.add(dach);
+  grupa.position.set(...(obiekt.pozycja || [0, 0, 0]));
+  grupa.rotation.set(...(obiekt.rotacja || [0, 0, 0]));
+  grupa.scale.set(...(obiekt.skala || [1, 1, 1]));
 
-  const wejscie = new THREE.Mesh(
-    new THREE.BoxGeometry(2, 3, 0.3),
-    new THREE.MeshStandardMaterial({
-      color: 0x23324f
-    })
-  );
-  wejscie.position.set(0, 1.5, 4.15);
-  wejscie.name = 'Wejście';
-  grupa.add(wejscie);
-
-  const plac = new THREE.Mesh(
-    new THREE.BoxGeometry(18, 0.1, 14),
-    new THREE.MeshStandardMaterial({
-      color: 0xd8e3f5,
-      roughness: 1
-    })
-  );
-  plac.position.y = 0.05;
-  grupa.add(plac);
-
-  obiektGlowny = grupa;
+  grupa.userData.obiektId = obiekt.id;
   scene.add(grupa);
-  dopasujWidokDoObiektu(grupa);
+
+  obiekt.model = grupa;
+  obiektySceny.push(obiekt);
+  mapaObiektow.set(obiekt.id, obiekt);
+}
+
+async function wczytajModelObiektu(obiekt) {
+  try {
+    const gltf = await loader.loadAsync(obiekt.model3d);
+    const model = gltf.scene;
+
+    model.position.set(...(obiekt.pozycja || [0, 0, 0]));
+    model.rotation.set(...(obiekt.rotacja || [0, 0, 0]));
+    model.scale.set(...(obiekt.skala || [1, 1, 1]));
+
+    model.traverse((child) => {
+      if (child.isMesh) {
+        child.userData.obiektId = obiekt.id;
+        child.name = child.name || obiekt.nazwa;
+        child.castShadow = false;
+        child.receiveShadow = false;
+      }
+    });
+
+    model.userData.obiektId = obiekt.id;
+    scene.add(model);
+
+    obiekt.model = model;
+    obiektySceny.push(obiekt);
+    mapaObiektow.set(obiekt.id, obiekt);
+  } catch (err) {
+    console.warn(`Nie udało się wczytać modelu ${obiekt.nazwa}, tworzę placeholder`, err);
+    stworzPlaceholder(obiekt);
+  }
+}
+
+async function wczytajObiekty() {
+  const response = await fetch('./dane/obiekty.json');
+  const dane = await response.json();
+
+  for (const obiekt of dane.obiekty) {
+    await wczytajModelObiektu(obiekt);
+  }
+
+  if (obiektySceny.length > 0) {
+    zapamietajWidok();
+    zaznaczObiekt(obiektySceny[0].id);
+  }
 }
 
 function ustawWidokPrzod() {
-  if (!obiektGlowny) return;
-  const box = new THREE.Box3().setFromObject(obiektGlowny);
+  if (!wybranyObiektId) return;
+  const obiekt = mapaObiektow.get(wybranyObiektId);
+  if (!obiekt?.model) return;
+
+  const box = new THREE.Box3().setFromObject(obiekt.model);
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
   const distance = Math.max(size.x, size.y, size.z) * 1.8;
@@ -202,8 +283,11 @@ function ustawWidokPrzod() {
 }
 
 function ustawWidokGora() {
-  if (!obiektGlowny) return;
-  const box = new THREE.Box3().setFromObject(obiektGlowny);
+  if (!wybranyObiektId) return;
+  const obiekt = mapaObiektow.get(wybranyObiektId);
+  if (!obiekt?.model) return;
+
+  const box = new THREE.Box3().setFromObject(obiekt.model);
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
   const distance = Math.max(size.x, size.y, size.z) * 1.8;
@@ -213,11 +297,6 @@ function ustawWidokGora() {
   controls.update();
 }
 
-function ustawWidokPerspektywiczny() {
-  if (!obiektGlowny) return;
-  dopasujWidokDoObiektu(obiektGlowny);
-}
-
 function onPointerClick(event) {
   const rect = renderer.domElement.getBoundingClientRect();
 
@@ -225,12 +304,18 @@ function onPointerClick(event) {
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
   raycaster.setFromCamera(mouse, camera);
-
   const intersects = raycaster.intersectObjects(scene.children, true);
 
-  if (intersects.length > 0) {
-    const trafiony = intersects[0].object;
-    statusEl.textContent = `Kliknięto element: ${trafiony.name || 'bez nazwy'}`;
+  if (!intersects.length) return;
+
+  let clicked = intersects[0].object;
+
+  while (clicked && !clicked.userData.obiektId && clicked.parent) {
+    clicked = clicked.parent;
+  }
+
+  if (clicked?.userData?.obiektId) {
+    zaznaczObiekt(clicked.userData.obiektId);
   }
 }
 
@@ -238,13 +323,17 @@ resetWidokuBtn.addEventListener('click', () => {
   camera.position.copy(initialCameraPosition);
   controls.target.copy(initialTarget);
   controls.update();
+  przywrocWidocznoscWszystkich();
   statusEl.textContent = 'Widok zresetowany';
 });
 
 dopasujWidokBtn.addEventListener('click', () => {
-  if (obiektGlowny) {
-    dopasujWidokDoObiektu(obiektGlowny);
-    statusEl.textContent = 'Dopasowano widok do obiektu';
+  if (wybranyObiektId) {
+    const obiekt = mapaObiektow.get(wybranyObiektId);
+    if (obiekt?.model) {
+      dopasujWidokDoObiektu(obiekt.model);
+      statusEl.textContent = 'Dopasowano widok do wybranego obiektu';
+    }
   }
 });
 
@@ -259,7 +348,10 @@ widokGoraBtn.addEventListener('click', () => {
 });
 
 widokPerspBtn.addEventListener('click', () => {
-  ustawWidokPerspektywiczny();
+  if (wybranyObiektId) {
+    const obiekt = mapaObiektow.get(wybranyObiektId);
+    if (obiekt?.model) dopasujWidokDoObiektu(obiekt.model);
+  }
   statusEl.textContent = 'Widok perspektywiczny';
 });
 
@@ -272,12 +364,14 @@ function animuj() {
   renderer.render(scene, camera);
 }
 
-function start() {
+async function start() {
   ustawRozmiar();
-  wypelnijPanel();
-  stworzPlaceholderBudynku();
-  statusEl.textContent = 'Interaktywna przestrzeń 3D gotowa';
+  statusEl.textContent = 'Ładowanie obiektów 3D...';
+  await wczytajObiekty();
   animuj();
 }
 
-start();
+start().catch((err) => {
+  console.error(err);
+  statusEl.textContent = 'Błąd ładowania sceny';
+});
